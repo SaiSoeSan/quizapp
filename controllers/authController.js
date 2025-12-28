@@ -57,6 +57,60 @@ const register = async (req, res) => {
     });
   }
 };
+
+/**
+ * Login an existing user
+ */
+
+const login = async (req, res) => {
+  // Check validation results FIRST
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: "Validation failed",
+      errors: errors.array(),
+    });
+  }
+
+  try {
+    const { email, password } = req.body;
+
+    // Find user by email
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
+    }
+
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid email or password" });
+    }
+
+    const token = authMiddleware.generateToken(user.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: user,
+      token: token,
+    });
+  } catch (error) {
+    console.error("Error in login:", error);
+    res.status(500).json({
+      success: false,
+      message: "Login failed",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
+  login,
 };
