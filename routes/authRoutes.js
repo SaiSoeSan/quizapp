@@ -12,7 +12,12 @@ const registrationValidationRules = [
   body("firstName").notEmpty().withMessage("First name is required"),
   body("lastName").notEmpty().withMessage("Last name is required"),
 ];
+const loginValidationRules = [
+  body("email").notEmpty().isEmail().withMessage("Valid email is required"),
+  body("password").notEmpty().withMessage("Password is required"),
+];
 
 router.post("/register", registrationValidationRules, auth.register);
+router.post("/login", loginValidationRules, auth.login);
 
 module.exports = router;
