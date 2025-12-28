@@ -10,6 +10,13 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
     }
+
+    /**
+     * Find a user by email
+     */
+    static async findByEmail(email) {
+      return await this.findOne({ where: { email } });
+    }
   }
   User.init(
     {
