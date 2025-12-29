@@ -24,13 +24,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: false,
         unique: true,
-        validate: {
-          isEmail: true,
-        },
       },
       phone: {
         type: DataTypes.STRING(20),
-        allowNull: true,
       },
       password: {
         type: DataTypes.STRING(255),
@@ -56,9 +52,6 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "users",
       underscored: true,
       paranoid: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
-      deletedAt: "deleted_at",
     }
   );
   return User;
