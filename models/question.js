@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
       Question.belongsTo(models.QuestionSet, {
         foreignKey: "question_set_id",
       });
+      
+      Question.hasMany(models.Option, {
+        as: "options"
+      });
     }
   }
   Question.init(
