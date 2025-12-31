@@ -1,5 +1,5 @@
 const express = require("express");
-const { authRoutes } = require("./routes");
+const { authRoutes, adminRoutes } = require("./routes");
 const app = express();
 const port = 3000;
 
@@ -22,6 +22,7 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Start the server
 app.listen(port, () => {
