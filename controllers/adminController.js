@@ -1,5 +1,7 @@
 const { QuestionSet, Question, Option } = require("../models");
 const { validationResult } = require("express-validator");
+const { sequelize } = require("../models");
+const { or } = require("sequelize");
 
 /**
  * Create a new question set
@@ -131,9 +133,100 @@ const updateQuestionSet = async (req, res) => {
   }
 };
 
+/**
+ * Create a question in a question set
+ * @param {setId} req
+ * @param {Question} res
+ * @returns
+ */
+const createQuestion = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: "Validation failed",
+      errors: errors.array(),
+    });
+  }
+  const t = await sequelize.transaction();
+  try {
+    const { setId } = req.params;
+    const { question_text, question_type, options, correct_option } = req.body;
+
+    const questionSet = await QuestionSet.findByPk(setId);
+    if (!questionSet) {
+      return res.status(404).json({
+        success: false,
+        message: "Question set not found",
+      });
+    }
+
+    const newQuestion = await Question.create({
+      question_set_id: setId,
+      question_text,
+      question_type,
+    });
+
+    for (const optionText of options) {
+      await Option.create({
+        question_id: newQuestion.id,
+        option_text: optionText,
+        is_correct: optionText === correct_option,
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Question created successfully",
+      question: newQuestion,
+    });
+    await t.commit();
+  } catch (error) {
+    await t.rollback();
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get all question by question set ID
+ */
+const getQuestionsBySetId = async (req, res) => {
+  try {
+    const { setId } = req.params;
+
+    const questionSet = await QuestionSet.findByPk(setId);
+    if (!questionSet) {
+      return res.status(404).json({
+        success: false,
+        message: "Question set not found",
+      });
+    }
+    const questions = await Question.findAll({
+      where: { question_set_id: setId },
+      include: { model: Option, as: "options" },
+    });
+    res.status(200).json({
+      success: true,
+      questions,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createQuestionSet,
   getAllQuestionSets,
   deleteQuestionSet,
   updateQuestionSet,
+  createQuestion,
+  getQuestionsBySetId,
 };

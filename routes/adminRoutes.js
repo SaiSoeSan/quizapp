@@ -10,6 +10,19 @@ const createQuestionSetValidationRules = [
   body("description").optional().isString(),
   body("youtube_link").optional().isURL().withMessage("Must be a valid URL"),
 ];
+const createQuestionValidationRules = [
+  body("question_text").notEmpty().withMessage("Question text is required"),
+  body("question_type")
+    .notEmpty()
+    .isIn(["multiple_choice", "true_false"])
+    .withMessage(
+      "Question type must be either 'multiple_choice' or 'true_false'"
+    ),
+  body("options")
+    .isArray({ min: 2 })
+    .withMessage("At least two options are required"),
+  body("correct_option").notEmpty().withMessage("Correct option is required"),
+];
 
 router.post(
   "/question-sets",
@@ -24,5 +37,13 @@ router.put(
   createQuestionSetValidationRules,
   admin.updateQuestionSet
 );
+
+router.post(
+  "/question-sets/:setId/questions",
+  createQuestionValidationRules,
+  admin.createQuestion
+);
+
+router.get("/question-sets/:setId/questions", admin.getQuestionsBySetId);
 
 module.exports = router;
