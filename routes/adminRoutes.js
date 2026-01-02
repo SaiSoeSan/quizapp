@@ -45,5 +45,6 @@ router.post(
 );
 
 router.get("/question-sets/:setId/questions", admin.getQuestionsBySetId);
+router.get("/users", admin.getAllUsers);
 
 module.exports = router;
