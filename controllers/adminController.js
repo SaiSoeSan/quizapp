@@ -1,7 +1,6 @@
-const { QuestionSet, Question, Option } = require("../models");
+const { QuestionSet, Question, Option, User } = require("../models");
 const { validationResult } = require("express-validator");
 const { sequelize } = require("../models");
-const { or } = require("sequelize");
 
 /**
  * Create a new question set
@@ -135,9 +134,6 @@ const updateQuestionSet = async (req, res) => {
 
 /**
  * Create a question in a question set
- * @param {setId} req
- * @param {Question} res
- * @returns
  */
 const createQuestion = async (req, res) => {
   const errors = validationResult(req);
@@ -222,6 +218,25 @@ const getQuestionsBySetId = async (req, res) => {
   }
 };
 
+/**
+ * Get all users
+ */
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createQuestionSet,
   getAllQuestionSets,
@@ -229,4 +244,5 @@ module.exports = {
   updateQuestionSet,
   createQuestion,
   getQuestionsBySetId,
+  getAllUsers,
 };
