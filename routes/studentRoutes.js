@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const studentController = require("../controllers/studentController");
 const { body } = require("express-validator");
+const { authenticate, studentOnly } = require("../middleware/auth");
+
+router.use([authenticate, studentOnly]);
 
 const submitAttemptValidationRules = [
   body("answers").isArray().withMessage("Answers must be an array"),
