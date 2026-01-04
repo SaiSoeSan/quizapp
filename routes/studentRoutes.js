@@ -16,7 +16,7 @@ const submitAttemptValidationRules = [
     .withMessage("Selected option ID must be an integer"),
 ];
 
-router.post("/attempt", studentController.startAttempt);
+router.post("/question-sets/:setId/attempt", studentController.startAttempt);
 
 // Submit an attempt
 router.post(

@@ -60,12 +60,12 @@ const submitAttempt = (req, res) => {
       errors: errors.array(),
     });
   }
-  
+
   const { attemptId } = req.params;
   const { answers } = req.body;
   const userId = req.user.id;
 
-  try { 
+  try {
   } catch (error) {
     res.status(500).json({
       success: false,

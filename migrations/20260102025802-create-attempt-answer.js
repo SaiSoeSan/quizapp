@@ -55,6 +55,8 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("AttemptAnswers");
+    await queryInterface.sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+    await queryInterface.dropTable("attempt_answers");
+    await queryInterface.sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
   },
 };

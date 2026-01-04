@@ -10,7 +10,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon app.js",
     "db:migrate": "sequelize-cli db:migrate",
-    "db:rollback": "sequelize-cli db:migrate:undo"
+    "db:migrate:status": "sequelize-cli db:migrate:status",
+    "db:rollback": "sequelize-cli db:migrate:undo",
+    "db:rollback:all": "sequelize-cli db:migrate:undo:all",
+    "db:seed": "sequelize-cli db:seed:all",
+    "db:seed:undo": "sequelize-cli db:seed:undo",
+    "db:seed:undo:all": "sequelize-cli db:seed:undo:all"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
