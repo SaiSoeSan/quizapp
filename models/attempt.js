@@ -8,17 +8,17 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Attempt.belongsTo(models.User, { 
+      Attempt.belongsTo(models.User, {
         foreignKey: "user_id",
-        as: "user"
+        as: "user",
       });
       Attempt.belongsTo(models.QuestionSet, {
         foreignKey: "question_set_id",
-        as: "questionSet",
+        as: "question_set",
       });
       Attempt.hasMany(models.AttemptAnswer, {
         foreignKey: "attempt_id",
-        as: "attemptAnswers",
+        as: "attempt_answers",
       });
     }
   }
