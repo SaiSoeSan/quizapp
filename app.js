@@ -1,12 +1,13 @@
 const express = require("express");
 const { authRoutes, adminRoutes, studentRoutes } = require("./routes");
 const app = express();
-const port = 3000;
+const cors = require("cors");
+const port = process.env.PORT || 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cors());
 
-// Sample route
 app.get("/", (req, res) => {
   res.json({
     success: true,
