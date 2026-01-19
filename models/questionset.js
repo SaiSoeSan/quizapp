@@ -19,6 +19,11 @@ module.exports = (sequelize, DataTypes) => {
       title: DataTypes.STRING,
       description: DataTypes.STRING,
       youtube_link: DataTypes.STRING,
+      status: {
+        type: DataTypes.ENUM("draft", "active"),
+        allowNull: false,
+        defaultValue: "draft",
+      },
     },
     {
       sequelize,
@@ -26,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "question_sets",
       underscored: true,
       paranoid: true,
-    }
+    },
   );
   return QuestionSet;
 };
