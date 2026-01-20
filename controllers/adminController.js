@@ -45,7 +45,25 @@ const createQuestionSet = async (req, res) => {
 
 const getAllQuestionSets = async (req, res) => {
   try {
-    const questionSets = await QuestionSet.findAll();
+    const questionSets = await QuestionSet.findAll({
+      attributes: {
+        include: [
+          [
+            sequelize.fn("COUNT", sequelize.col("questions.id")),
+            "questionCount",
+          ],
+        ],
+      },
+      include: [
+        {
+          model: Question,
+          as: "questions",
+          attributes: [],
+        },
+      ],
+      group: ["QuestionSet.id"],
+      order: [["created_at", "DESC"]],
+    });
     res.status(200).json({
       success: true,
       questionSets,
