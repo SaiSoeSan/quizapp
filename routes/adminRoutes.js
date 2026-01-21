@@ -11,6 +11,10 @@ const createQuestionSetValidationRules = [
   body("title").notEmpty().withMessage("Title is required"),
   body("description").optional().isString(),
   body("youtube_link").optional().isURL().withMessage("Must be a valid URL"),
+  body("status")
+    .optional()
+    .isIn(["draft", "active"])
+    .withMessage("Status must be either 'draft' or 'active'"),
 ];
 const createQuestionValidationRules = [
   body("question_text").notEmpty().withMessage("Question text is required"),
