@@ -107,6 +107,34 @@ const deleteQuestionSet = async (req, res) => {
 };
 
 /**
+ * Get A question set by ID
+ */
+
+const getQuestionSetById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const questionSet = await QuestionSet.findByPk(id);
+    if (!questionSet) {
+      return res.status(404).json({
+        success: false,
+        message: "Question set not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      questionSet,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Update a question set
  */
 const updateQuestionSet = async (req, res) => {
@@ -261,6 +289,7 @@ module.exports = {
   deleteQuestionSet,
   updateQuestionSet,
   createQuestion,
+  getQuestionSetById,
   getQuestionsBySetId,
   getAllUsers,
 };

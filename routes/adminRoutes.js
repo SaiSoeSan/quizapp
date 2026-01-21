@@ -18,7 +18,7 @@ const createQuestionValidationRules = [
     .notEmpty()
     .isIn(["multiple_choice", "true_false"])
     .withMessage(
-      "Question type must be either 'multiple_choice' or 'true_false'"
+      "Question type must be either 'multiple_choice' or 'true_false'",
     ),
   body("options")
     .isArray({ min: 2 })
@@ -26,27 +26,28 @@ const createQuestionValidationRules = [
   body("correct_option").notEmpty().withMessage("Correct option is required"),
 ];
 
+// Question Set routes
 router.post(
   "/question-sets",
   createQuestionSetValidationRules,
-  admin.createQuestionSet
+  admin.createQuestionSet,
 );
-
 router.get("/question-sets", admin.getAllQuestionSets);
+router.get("/question-sets/:id", admin.getQuestionSetById);
 router.delete("/question-sets/:id", admin.deleteQuestionSet);
 router.put(
   "/question-sets/:id",
   createQuestionSetValidationRules,
-  admin.updateQuestionSet
+  admin.updateQuestionSet,
 );
-
 router.post(
   "/question-sets/:setId/questions",
   createQuestionValidationRules,
-  admin.createQuestion
+  admin.createQuestion,
 );
-
 router.get("/question-sets/:setId/questions", admin.getQuestionsBySetId);
+
+// User management routes
 router.get("/users", admin.getAllUsers);
 
 module.exports = router;
