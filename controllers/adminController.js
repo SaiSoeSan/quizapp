@@ -114,8 +114,18 @@ const deleteQuestionSet = async (req, res) => {
 const getQuestionSetById = async (req, res) => {
   try {
     const { id } = req.params;
-    const questionSet = await QuestionSet.findByPk(id);
-    if (!questionSet) {
+    // get a question set by id including questions and options
+    const questionSetWithDetails = await QuestionSet.findByPk(id, {
+      include: {
+        model: Question,
+        as: "questions",
+        include: {
+          model: Option,
+          as: "options",
+        },
+      },
+    });
+    if (!questionSetWithDetails) {
       return res.status(404).json({
         success: false,
         message: "Question set not found",
@@ -124,7 +134,7 @@ const getQuestionSetById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      questionSet,
+      questionSet: questionSetWithDetails,
     });
   } catch (error) {
     res.status(500).json({
