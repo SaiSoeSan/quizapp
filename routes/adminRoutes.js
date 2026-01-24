@@ -27,7 +27,14 @@ const createQuestionValidationRules = [
   body("options")
     .isArray({ min: 2 })
     .withMessage("At least two options are required"),
-  body("correct_option").notEmpty().withMessage("Correct option is required"),
+
+  body("options.*.option_text")
+    .notEmpty()
+    .withMessage("Option text is required"),
+  body("options.*.is_correct")
+    .notEmpty()
+    .isBoolean()
+    .withMessage("Correct option is required"),
 ];
 
 // Question Set routes

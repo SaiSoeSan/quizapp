@@ -205,7 +205,7 @@ const createQuestion = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { setId } = req.params;
-    const { question_text, question_type, options, correct_option } = req.body;
+    const { question_text, question_type, options } = req.body;
 
     const questionSet = await QuestionSet.findByPk(setId);
     if (!questionSet) {
@@ -221,11 +221,11 @@ const createQuestion = async (req, res) => {
       question_type,
     });
 
-    for (const optionText of options) {
+    for (const option of options) {
       await Option.create({
         question_id: newQuestion.id,
-        option_text: optionText,
-        is_correct: optionText === correct_option,
+        option_text: option.option_text,
+        is_correct: option.is_correct,
       });
     }
 
