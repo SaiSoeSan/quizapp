@@ -51,12 +51,22 @@ router.put(
   createQuestionSetValidationRules,
   admin.updateQuestionSet,
 );
+// Create Question routes
 router.post(
   "/question-sets/:setId/questions",
   createQuestionValidationRules,
   admin.createQuestion,
 );
 router.get("/question-sets/:setId/questions", admin.getQuestionsBySetId);
+router.put(
+  "/question-sets/:setId/questions/:questionId",
+  createQuestionValidationRules,
+  admin.updateQuestion,
+);
+router.delete(
+  "/question-sets/:setId/questions/:questionId",
+  admin.deleteQuestion,
+);
 
 // User management routes
 router.get("/users", admin.getAllUsers);

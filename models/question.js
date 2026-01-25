@@ -12,9 +12,9 @@ module.exports = (sequelize, DataTypes) => {
       Question.belongsTo(models.QuestionSet, {
         foreignKey: "question_set_id",
       });
-      
+
       Question.hasMany(models.Option, {
-        as: "options"
+        as: "options",
       });
     }
   }
@@ -40,7 +40,16 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "questions",
       underscored: true,
       paranoid: true,
-    }
+      hooks: {
+        afterDestroy: async (question, options) => {
+          const { Option } = sequelize.models;
+          await Option.destroy({
+            where: { question_id: question.id },
+            transaction: options.transaction,
+          });
+        },
+      },
+    },
   );
   return Question;
 };

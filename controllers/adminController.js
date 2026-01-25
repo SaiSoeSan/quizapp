@@ -195,6 +195,7 @@ const updateQuestionSet = async (req, res) => {
  */
 const createQuestion = async (req, res) => {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     return res.status(422).json({
       success: false,
@@ -202,7 +203,9 @@ const createQuestion = async (req, res) => {
       errors: errors.array(),
     });
   }
+
   const t = await sequelize.transaction();
+
   try {
     const { setId } = req.params;
     const { question_text, question_type, options } = req.body;
@@ -215,18 +218,24 @@ const createQuestion = async (req, res) => {
       });
     }
 
-    const newQuestion = await Question.create({
-      question_set_id: setId,
-      question_text,
-      question_type,
-    });
+    const newQuestion = await Question.create(
+      {
+        question_set_id: setId,
+        question_text,
+        question_type,
+      },
+      { transaction: t },
+    );
 
     for (const option of options) {
-      await Option.create({
-        question_id: newQuestion.id,
-        option_text: option.option_text,
-        is_correct: option.is_correct,
-      });
+      await Option.create(
+        {
+          question_id: newQuestion.id,
+          option_text: option.option_text,
+          is_correct: option.is_correct,
+        },
+        { transaction: t },
+      );
     }
 
     res.status(201).json({
@@ -259,15 +268,141 @@ const getQuestionsBySetId = async (req, res) => {
         message: "Question set not found",
       });
     }
+
     const questions = await Question.findAll({
       where: { question_set_id: setId },
       include: { model: Option, as: "options" },
     });
+
     res.status(200).json({
       success: true,
       questions,
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update a question in a question set
+ */
+
+const updateQuestion = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: "Validation failed",
+      errors: errors.array(),
+    });
+  }
+
+  try {
+    const result = await sequelize.transaction(async (t) => {
+      const { setId, questionId } = req.params;
+      const { question_text, question_type, options } = req.body;
+
+      const questionSet = await QuestionSet.findByPk(setId);
+      if (!questionSet) {
+        return res.status(404).json({
+          success: false,
+          message: "Question set not found",
+        });
+      }
+
+      const question = await Question.findOne({
+        where: { id: questionId, question_set_id: setId },
+      });
+
+      if (!question) {
+        return res.status(404).json({
+          success: false,
+          message: "Question not found",
+        });
+      }
+
+      question.question_text = question_text;
+      question.question_type = question_type;
+      await question.save({ transaction: t });
+
+      await Option.destroy({
+        where: { question_id: questionId },
+        force: true,
+        individualHooks: true,
+        transaction: t,
+      });
+
+      for (const option of options) {
+        await Option.create(
+          {
+            question_id: questionId,
+            option_text: option.option_text,
+            is_correct: option.is_correct,
+          },
+          { transaction: t },
+        );
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Question updated successfully",
+        question,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/** Delete a question in a question set */
+const deleteQuestion = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const { setId, questionId } = req.params;
+
+    const questionSet = await QuestionSet.findByPk(setId);
+
+    if (!questionSet) {
+      return res.status(404).json({
+        success: false,
+        message: "Question set not found",
+      });
+    }
+
+    const question = await Question.findOne({
+      where: { id: questionId, question_set_id: setId },
+    });
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    await question.destroy({
+      individualHooks: true,
+      transaction: t,
+    });
+
+    await t.commit();
+
+    res.status(200).json({
+      success: true,
+      message: "Question deleted successfully",
+    });
+  } catch (error) {
+    await t.rollback();
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -301,6 +436,8 @@ module.exports = {
   deleteQuestionSet,
   updateQuestionSet,
   createQuestion,
+  updateQuestion,
+  deleteQuestion,
   getQuestionSetById,
   getQuestionsBySetId,
   getAllUsers,
