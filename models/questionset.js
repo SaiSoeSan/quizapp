@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       title: DataTypes.STRING,
       description: DataTypes.STRING,
-      youtube_link: DataTypes.STRING,
+      youtubeLink: DataTypes.STRING,
       status: {
         type: DataTypes.ENUM("draft", "active"),
         allowNull: false,

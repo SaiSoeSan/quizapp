@@ -17,12 +17,12 @@ const createQuestionSet = async (req, res) => {
   }
 
   try {
-    const { title, description, youtube_link, status } = req.body;
+    const { title, description, youtubeLink, status } = req.body;
 
     const newQuestionSet = await QuestionSet.create({
       title,
       description,
-      youtube_link,
+      youtubeLink,
       status,
     });
 
@@ -160,9 +160,10 @@ const updateQuestionSet = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { title, description, youtube_link, status } = req.body;
+    const { title, description, youtubeLink, status } = req.body;
 
     const questionSet = await QuestionSet.findByPk(id);
+
     if (!questionSet) {
       return res.status(404).json({
         success: false,
@@ -170,10 +171,10 @@ const updateQuestionSet = async (req, res) => {
       });
     }
 
-    questionSet.title = title;
-    questionSet.description = description;
-    questionSet.youtube_link = youtube_link;
-    questionSet.status = status;
+    questionSet.title = title || questionSet.title;
+    questionSet.description = description || questionSet.description;
+    questionSet.youtubeLink = youtubeLink || questionSet.youtubeLink;
+    questionSet.status = status || questionSet.status;
     await questionSet.save();
 
     res.status(200).json({
