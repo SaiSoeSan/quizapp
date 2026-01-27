@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       title: DataTypes.STRING,
       description: DataTypes.STRING,
       youtubeLink: DataTypes.STRING,
+      sortOrder: DataTypes.INTEGER,
       status: {
         type: DataTypes.ENUM("draft", "active"),
         allowNull: false,
