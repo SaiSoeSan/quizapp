@@ -19,11 +19,19 @@ const createQuestionSet = async (req, res) => {
   try {
     const { title, description, youtubeLink, status } = req.body;
 
+    // sort order logic auto generate, max sort order + 1
+    let sortOrder = 1;
+    const maxSortOrder = await QuestionSet.max("sortOrder");
+    if (maxSortOrder) {
+      sortOrder = maxSortOrder + 1;
+    }
+
     const newQuestionSet = await QuestionSet.create({
       title,
       description,
       youtubeLink,
       status,
+      sortOrder,
     });
 
     res.status(201).json({
@@ -63,7 +71,7 @@ const getAllQuestionSets = async (req, res) => {
         },
       ],
       group: ["QuestionSet.id"],
-      order: [["created_at", "DESC"]],
+      order: [["createdAt", "DESC"]],
     });
     res.status(200).json({
       success: true,
