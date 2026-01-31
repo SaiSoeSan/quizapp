@@ -446,7 +446,9 @@ const getQuestionSetById = async (req, res) => {
       order: [["sortOrder", "ASC"]],
     });
 
-    const currentIndex = allQuestionSets.findIndex((qs) => qs.id === parseInt(id));
+    const currentIndex = allQuestionSets.findIndex(
+      (qs) => qs.id === parseInt(id),
+    );
     let isLocked = false;
 
     if (currentIndex > 0) {
@@ -677,6 +679,10 @@ const getAttemptResult = async (req, res) => {
         passed: percentage >= 70,
         submittedAt: attempt.submitted_at,
         answers,
+        questionSet: {
+          id: attempt.question_set.id,
+          title: attempt.question_set.title,
+        },
       },
     });
   } catch (error) {
@@ -747,7 +753,7 @@ const submitAttempt = async (req, res) => {
       }
 
       const selectedOption = question.options.find(
-        (opt) => opt.id === selected_option_id
+        (opt) => opt.id === selected_option_id,
       );
 
       const correctOption = question.options.find((opt) => opt.is_correct);
