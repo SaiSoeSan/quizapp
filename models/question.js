@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Question.belongsTo(models.QuestionSet, {
-        foreignKey: "question_set_id",
+        foreignKey: "questionSetId",
       });
 
       Question.hasMany(models.Option, {
@@ -20,18 +20,21 @@ module.exports = (sequelize, DataTypes) => {
   }
   Question.init(
     {
-      question_text: {
+      questionText: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "question_text",
       },
-      question_type: {
+      questionType: {
         type: DataTypes.ENUM,
         values: ["multiple_choice", "true_false"],
         allowNull: false,
+        field: "question_type",
       },
-      question_set_id: {
+      questionSetId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "question_set_id",
       },
     },
     {
@@ -44,7 +47,7 @@ module.exports = (sequelize, DataTypes) => {
         afterDestroy: async (question, options) => {
           const { Option } = sequelize.models;
           await Option.destroy({
-            where: { question_id: question.id },
+            where: { questionId: question.id },
             transaction: options.transaction,
           });
         },

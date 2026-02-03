@@ -21,8 +21,8 @@ const createQuestionSetValidationRules = [
 ];
 
 const createQuestionValidationRules = [
-  body("question_text").notEmpty().withMessage("Question text is required"),
-  body("question_type")
+  body("questionText").notEmpty().withMessage("Question text is required"),
+  body("questionType")
     .notEmpty()
     .isIn(["multiple_choice", "true_false"])
     .withMessage(
@@ -32,13 +32,23 @@ const createQuestionValidationRules = [
     .isArray({ min: 2 })
     .withMessage("At least two options are required"),
 
-  body("options.*.option_text")
+  body("options.*.optionText")
     .notEmpty()
     .withMessage("Option text is required"),
-  body("options.*.is_correct")
+  body("options.*.isCorrect")
     .notEmpty()
     .isBoolean()
     .withMessage("Correct option is required"),
+];
+
+const createStudentValidationRules = [
+  body("firstName").notEmpty().withMessage("First name is required"),
+  body("lastName").notEmpty().withMessage("Last name is required"),
+  body("email").isEmail().withMessage("Valid email is required"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
+  body("phone").optional().isString(),
 ];
 
 // Question Set routes
@@ -73,6 +83,10 @@ router.delete(
 );
 
 // User management routes
-router.get("/users", admin.getAllUsers);
+router.get("/users", admin.getAllStudents);
+router.post("/users", createStudentValidationRules, admin.createStudent);
+router.get("/users/:id", admin.getUserById);
+router.put("/users/:id", admin.updateUser);
+router.delete("/users/:id", admin.deleteUser);
 
 module.exports = router;

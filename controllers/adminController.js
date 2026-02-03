@@ -1,6 +1,7 @@
 const { QuestionSet, Question, Option, User } = require("../models");
 const { validationResult } = require("express-validator");
 const { sequelize } = require("../models");
+const bcrypt = require("bcrypt");
 
 /**
  * Create a new question set
@@ -217,7 +218,7 @@ const createQuestion = async (req, res) => {
 
   try {
     const { setId } = req.params;
-    const { question_text, question_type, options } = req.body;
+    const { questionText, questionType, options } = req.body;
 
     const questionSet = await QuestionSet.findByPk(setId);
     if (!questionSet) {
@@ -229,9 +230,9 @@ const createQuestion = async (req, res) => {
 
     const newQuestion = await Question.create(
       {
-        question_set_id: setId,
-        question_text,
-        question_type,
+        questionSetId: setId,
+        questionText,
+        questionType,
       },
       { transaction: t },
     );
@@ -239,9 +240,9 @@ const createQuestion = async (req, res) => {
     for (const option of options) {
       await Option.create(
         {
-          question_id: newQuestion.id,
-          option_text: option.option_text,
-          is_correct: option.is_correct,
+          questionId: newQuestion.id,
+          optionText: option.optionText,
+          isCorrect: option.isCorrect,
         },
         { transaction: t },
       );
@@ -279,7 +280,7 @@ const getQuestionsBySetId = async (req, res) => {
     }
 
     const questions = await Question.findAll({
-      where: { question_set_id: setId },
+      where: { questionSetId: setId },
       include: { model: Option, as: "options" },
     });
 
@@ -314,7 +315,7 @@ const updateQuestion = async (req, res) => {
   try {
     const result = await sequelize.transaction(async (t) => {
       const { setId, questionId } = req.params;
-      const { question_text, question_type, options } = req.body;
+      const { questionText, questionType, options } = req.body;
 
       const questionSet = await QuestionSet.findByPk(setId);
       if (!questionSet) {
@@ -325,7 +326,7 @@ const updateQuestion = async (req, res) => {
       }
 
       const question = await Question.findOne({
-        where: { id: questionId, question_set_id: setId },
+        where: { id: questionId, questionSetId: setId },
       });
 
       if (!question) {
@@ -335,12 +336,12 @@ const updateQuestion = async (req, res) => {
         });
       }
 
-      question.question_text = question_text;
-      question.question_type = question_type;
+      question.questionText = questionText;
+      question.questionType = questionType;
       await question.save({ transaction: t });
 
       await Option.destroy({
-        where: { question_id: questionId },
+        where: { questionId: questionId },
         force: true,
         individualHooks: true,
         transaction: t,
@@ -349,9 +350,9 @@ const updateQuestion = async (req, res) => {
       for (const option of options) {
         await Option.create(
           {
-            question_id: questionId,
-            option_text: option.option_text,
-            is_correct: option.is_correct,
+            questionId: questionId,
+            optionText: option.optionText,
+            isCorrect: option.isCorrect,
           },
           { transaction: t },
         );
@@ -389,7 +390,7 @@ const deleteQuestion = async (req, res) => {
     }
 
     const question = await Question.findOne({
-      where: { id: questionId, question_set_id: setId },
+      where: { id: questionId, questionSetId: setId },
     });
 
     if (!question) {
@@ -421,14 +422,183 @@ const deleteQuestion = async (req, res) => {
 };
 
 /**
- * Get all users
+ * Get all students (users with role 'student')
  */
-const getAllUsers = async (req, res) => {
+const getAllStudents = async (req, res) => {
   try {
-    const users = await User.findAll();
+    const students = await User.findAll({
+      where: { role: "student" },
+      attributes: { exclude: ["password"] },
+      order: [["createdAt", "DESC"]],
+    });
     res.status(200).json({
       success: true,
-      users,
+      users: students,
+      total: students.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get a user by ID
+ */
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id, {
+      attributes: { exclude: ["password"] },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update a user
+ */
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, phone } = req.body;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.phone = phone || user.phone;
+    await user.save();
+
+    // Exclude password from response
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Delete a user
+ */
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prevent deleting admin users
+    if (user.role === "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Cannot delete admin users",
+      });
+    }
+
+    await user.destroy();
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Create a new student
+ */
+const createStudent = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: "Validation failed",
+      errors: errors.array(),
+    });
+  }
+
+  try {
+    const { firstName, lastName, email, phone, password } = req.body;
+
+    // Check if user with the same email already exists
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use",
+      });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new student
+    const newStudent = await User.create({
+      email,
+      phone,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      role: "student",
+    });
+
+    // Exclude password from response
+    const userResponse = newStudent.toJSON();
+    delete userResponse.password;
+
+    res.status(201).json({
+      success: true,
+      message: "Student created successfully",
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({
@@ -449,5 +619,9 @@ module.exports = {
   deleteQuestion,
   getQuestionSetById,
   getQuestionsBySetId,
-  getAllUsers,
+  getAllStudents,
+  getUserById,
+  updateUser,
+  deleteUser,
+  createStudent,
 };

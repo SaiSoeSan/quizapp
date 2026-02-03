@@ -35,8 +35,8 @@ const register = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      first_name: firstName,
-      last_name: lastName,
+      firstName: firstName,
+      lastName: lastName,
       role: role || "student",
     });
 

@@ -9,25 +9,28 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Option.belongsTo(models.Question, {
-        foreignKey: "question_id",
+        foreignKey: "questionId",
         as: "question",
       });
     }
   }
   Option.init(
     {
-      question_id: {
+      questionId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "question_id",
       },
-      option_text: {
+      optionText: {
         type: DataTypes.STRING,
         allowNull: false,
+        field: "option_text",
       },
-      is_correct: {
+      isCorrect: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+        field: "is_correct",
       },
     },
     {

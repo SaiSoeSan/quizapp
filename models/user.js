@@ -32,13 +32,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-      first_name: {
+      firstName: {
         type: DataTypes.STRING(100),
         allowNull: false,
+        field: "first_name",
       },
-      last_name: {
+      lastName: {
         type: DataTypes.STRING(100),
         allowNull: false,
+        field: "last_name",
       },
       role: {
         type: DataTypes.ENUM("admin", "student"),
@@ -52,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "users",
       underscored: true,
       paranoid: true,
-    }
+    },
   );
   return User;
 };
