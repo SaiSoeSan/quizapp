@@ -9,39 +9,43 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Attempt.belongsTo(models.User, {
-        foreignKey: "user_id",
+        foreignKey: "userId",
         as: "user",
       });
       Attempt.belongsTo(models.QuestionSet, {
-        foreignKey: "question_set_id",
-        as: "question_set",
+        foreignKey: "questionSetId",
+        as: "questionSet",
       });
       Attempt.hasMany(models.AttemptAnswer, {
-        foreignKey: "attempt_id",
-        as: "attempt_answers",
+        foreignKey: "attemptId",
+        as: "attemptAnswers",
       });
     }
   }
   Attempt.init(
     {
-      user_id: {
+      userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "user_id",
       },
-      question_set_id: {
+      questionSetId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        field: "question_set_id",
       },
       score: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      is_submitted: {
+      isSubmitted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+        field: "is_submitted",
       },
-      submitted_at: {
+      submittedAt: {
         type: DataTypes.DATE,
+        field: "submitted_at",
       },
     },
     {
@@ -50,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "attempts",
       underscored: true,
       paranoid: true,
-    }
+    },
   );
   return Attempt;
 };

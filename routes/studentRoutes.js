@@ -8,10 +8,10 @@ router.use([authenticate, studentOnly]);
 
 const submitAttemptValidationRules = [
   body("answers").isArray().withMessage("Answers must be an array"),
-  body("answers.*.question_id")
+  body("answers.*.questionId")
     .isInt()
     .withMessage("Question ID must be an integer"),
-  body("answers.*.selected_option_id")
+  body("answers.*.selectedOptionId")
     .isInt()
     .withMessage("Selected option ID must be an integer"),
 ];
@@ -26,7 +26,10 @@ router.get("/question-sets", studentController.getQuestionSets);
 router.get("/question-sets/:id", studentController.getQuestionSetById);
 
 // Get or create attempt for practice (returns questions)
-router.get("/question-sets/:setId/attempt", studentController.getOrCreateAttempt);
+router.get(
+  "/question-sets/:setId/attempt",
+  studentController.getOrCreateAttempt,
+);
 
 // Start a new attempt (legacy endpoint, kept for compatibility)
 router.post("/question-sets/:setId/attempt", studentController.startAttempt);
@@ -38,7 +41,7 @@ router.get("/attempt/:attemptId/result", studentController.getAttemptResult);
 router.post(
   "/attempt/:attemptId/submit",
   submitAttemptValidationRules,
-  studentController.submitAttempt
+  studentController.submitAttempt,
 );
 
 module.exports = router;

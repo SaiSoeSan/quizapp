@@ -29,20 +29,20 @@ const getDashboard = async (req, res) => {
 
     // 2) Load all attempts for this user (newest first), with question set for activity titles
     const attempts = await Attempt.findAll({
-      where: { user_id: userId },
+      where: { userId: userId },
       include: [
         {
           model: QuestionSet,
-          as: "question_set",
+          as: "questionSet",
           attributes: ["id", "title"],
         },
       ],
-      order: [["created_at", "DESC"]],
+      order: [["createdAt", "DESC"]],
     });
 
     const attemptsBySet = {};
     attempts.forEach((attempt) => {
-      const setId = attempt.question_set_id;
+      const setId = attempt.questionSetId;
       if (!attemptsBySet[setId]) {
         attemptsBySet[setId] = [];
       }
@@ -60,7 +60,7 @@ const getDashboard = async (req, res) => {
     const questionSetsWithProgress = questionSets.map((qs) => {
       const qsAttempts = attemptsBySet[qs.id] || [];
       const submittedAttempts = qsAttempts.filter(
-        (a) => a.is_submitted === true,
+        (a) => a.isSubmitted === true,
       );
 
       const totalQuestions = Array.isArray(qs.questions)
@@ -88,11 +88,11 @@ const getDashboard = async (req, res) => {
           score: percentage,
           totalQuestions,
           attemptId: latestSubmitted.id,
-          completedAt: latestSubmitted.submitted_at,
+          completedAt: latestSubmitted.submittedAt,
         };
       } else {
         const inProgressAttempt = qsAttempts.find(
-          (a) => a.is_submitted === false,
+          (a) => a.isSubmitted === false,
         );
 
         if (inProgressAttempt) {
@@ -165,7 +165,7 @@ const getDashboard = async (req, res) => {
 
     // 4) Build recent activity (completed attempts only for now)
     const recentSubmittedAttempts = attempts.filter(
-      (a) => a.is_submitted === true,
+      (a) => a.isSubmitted === true,
     );
 
     return res.status(200).json({
@@ -196,7 +196,7 @@ const startAttempt = async (req, res) => {
         include: {
           model: Option,
           as: "options",
-          attributes: ["id", "option_text"],
+          attributes: ["id", "optionText"],
         },
         order: [
           ["id", "ASC"],
@@ -212,8 +212,8 @@ const startAttempt = async (req, res) => {
     }
 
     const newAttempt = await Attempt.create({
-      user_id: userId,
-      question_set_id: setId,
+      userId: userId,
+      questionSetId: setId,
     });
 
     res.status(201).json({
@@ -221,7 +221,7 @@ const startAttempt = async (req, res) => {
       message: "Attempt started successfully",
       attempt: {
         id: newAttempt.id,
-        question_set: questionSet,
+        questionSet: questionSet,
       },
     });
   } catch (error) {
@@ -256,13 +256,13 @@ const getQuestionSets = async (req, res) => {
 
     // Load all attempts for this user
     const attempts = await Attempt.findAll({
-      where: { user_id: userId },
-      order: [["created_at", "DESC"]],
+      where: { userId: userId },
+      order: [["createdAt", "DESC"]],
     });
 
     const attemptsBySet = {};
     attempts.forEach((attempt) => {
-      const setId = attempt.question_set_id;
+      const setId = attempt.questionSetId;
       if (!attemptsBySet[setId]) {
         attemptsBySet[setId] = [];
       }
@@ -273,7 +273,7 @@ const getQuestionSets = async (req, res) => {
     const questionSetsWithProgress = questionSets.map((qs) => {
       const qsAttempts = attemptsBySet[qs.id] || [];
       const submittedAttempts = qsAttempts.filter(
-        (a) => a.is_submitted === true,
+        (a) => a.isSubmitted === true,
       );
 
       const totalQuestions = Array.isArray(qs.questions)
@@ -299,11 +299,11 @@ const getQuestionSets = async (req, res) => {
           score: percentage,
           totalQuestions,
           attemptId: latestSubmitted.id,
-          completedAt: latestSubmitted.submitted_at,
+          completedAt: latestSubmitted.submittedAt,
         };
       } else {
         const inProgressAttempt = qsAttempts.find(
-          (a) => a.is_submitted === false,
+          (a) => a.isSubmitted === false,
         );
 
         if (inProgressAttempt) {
@@ -397,18 +397,18 @@ const getQuestionSetById = async (req, res) => {
     // Get user's attempts for this question set
     const attempts = await Attempt.findAll({
       where: {
-        user_id: userId,
-        question_set_id: id,
+        userId: userId,
+        questionSetId: id,
       },
-      order: [["created_at", "DESC"]],
+      order: [["createdAt", "DESC"]],
     });
 
     const totalQuestions = Array.isArray(questionSet.questions)
       ? questionSet.questions.length
       : 0;
 
-    const submittedAttempts = attempts.filter((a) => a.is_submitted === true);
-    const inProgressAttempt = attempts.find((a) => a.is_submitted === false);
+    const submittedAttempts = attempts.filter((a) => a.isSubmitted === true);
+    const inProgressAttempt = attempts.find((a) => a.isSubmitted === false);
 
     let progress = {
       questionSetId: questionSet.id,
@@ -429,7 +429,7 @@ const getQuestionSetById = async (req, res) => {
         score: percentage,
         totalQuestions,
         attemptId: latestSubmitted.id,
-        completedAt: latestSubmitted.submitted_at,
+        completedAt: latestSubmitted.submittedAt,
       };
     } else if (inProgressAttempt) {
       progress = {
@@ -457,9 +457,9 @@ const getQuestionSetById = async (req, res) => {
         const prevSetId = allQuestionSets[i].id;
         const prevAttempts = await Attempt.findAll({
           where: {
-            user_id: userId,
-            question_set_id: prevSetId,
-            is_submitted: true,
+            userId: userId,
+            questionSetId: prevSetId,
+            isSubmitted: true,
           },
         });
 
@@ -511,7 +511,7 @@ const getOrCreateAttempt = async (req, res) => {
         include: {
           model: Option,
           as: "options",
-          attributes: ["id", "option_text"],
+          attributes: ["id", "optionText"],
         },
         order: [["id", "ASC"]],
       },
@@ -534,40 +534,40 @@ const getOrCreateAttempt = async (req, res) => {
     // Check for existing in-progress attempt
     let attempt = await Attempt.findOne({
       where: {
-        user_id: userId,
-        question_set_id: setId,
-        is_submitted: false,
+        userId: userId,
+        questionSetId: setId,
+        isSubmitted: false,
       },
     });
 
     if (!attempt) {
       // Create new attempt
       attempt = await Attempt.create({
-        user_id: userId,
-        question_set_id: setId,
+        userId: userId,
+        questionSetId: setId,
       });
     }
 
     // Format questions for frontend
     const questions = questionSet.questions.map((q) => ({
       id: q.id,
-      question_text: q.question_text,
-      question_type: q.question_type,
+      questionText: q.questionText,
+      questionType: q.questionType,
       options: q.options.map((opt) => ({
         id: opt.id,
-        option_text: opt.option_text,
-        is_correct: opt.is_correct,
+        optionText: opt.optionText,
+        isCorrect: opt.isCorrect,
       })),
     }));
 
     // Get existing answers if any
     const existingAnswers = await AttemptAnswer.findAll({
-      where: { attempt_id: attempt.id },
+      where: { attemptId: attempt.id },
     });
 
     const answersMap = {};
     existingAnswers.forEach((ans) => {
-      answersMap[ans.question_id] = ans.selected_option_id;
+      answersMap[ans.questionId] = ans.selectedOptionId;
     });
 
     return res.status(200).json({
@@ -577,9 +577,9 @@ const getOrCreateAttempt = async (req, res) => {
           id: attempt.id,
           questionSetId: questionSet.id,
           userId: userId,
-          status: attempt.is_submitted ? "submitted" : "in_progress",
+          status: attempt.isSubmitted ? "submitted" : "in_progress",
           totalQuestions: questions.length,
-          startedAt: attempt.created_at,
+          startedAt: attempt.createdAt,
         },
         questionSet: {
           id: questionSet.id,
@@ -605,10 +605,10 @@ const getAttemptResult = async (req, res) => {
     const userId = req.user.id;
 
     const attempt = await Attempt.findOne({
-      where: { id: attemptId, user_id: userId },
+      where: { id: attemptId, userId: userId },
       include: {
         model: QuestionSet,
-        as: "question_set",
+        as: "questionSet",
         include: {
           model: Question,
           as: "questions",
@@ -627,7 +627,7 @@ const getAttemptResult = async (req, res) => {
       });
     }
 
-    if (!attempt.is_submitted) {
+    if (!attempt.isSubmitted) {
       return res.status(400).json({
         success: false,
         message: "Attempt has not been submitted yet",
@@ -636,35 +636,35 @@ const getAttemptResult = async (req, res) => {
 
     // Get all answers for this attempt
     const attemptAnswers = await AttemptAnswer.findAll({
-      where: { attempt_id: attemptId },
+      where: { attemptId: attemptId },
     });
 
     const answersMap = {};
     attemptAnswers.forEach((ans) => {
-      answersMap[ans.question_id] = ans;
+      answersMap[ans.questionId] = ans;
     });
 
     // Build result with all question details
-    const answers = attempt.question_set.questions.map((question) => {
+    const answers = attempt.questionSet.questions.map((question) => {
       const answer = answersMap[question.id];
-      const correctOption = question.options.find((opt) => opt.is_correct);
+      const correctOption = question.options.find((opt) => opt.isCorrect);
 
       return {
         questionId: question.id,
-        questionText: question.question_text,
-        questionType: question.question_type,
-        selectedOptionId: answer?.selected_option_id || null,
+        questionText: question.questionText,
+        questionType: question.questionType,
+        selectedOptionId: answer?.selectedOptionId || null,
         correctOptionId: correctOption?.id || null,
-        isCorrect: answer?.is_correct || false,
+        isCorrect: answer?.isCorrect || false,
         options: question.options.map((opt) => ({
           id: opt.id,
-          text: opt.option_text,
-          isCorrect: opt.is_correct,
+          text: opt.optionText,
+          isCorrect: opt.isCorrect,
         })),
       };
     });
 
-    const totalQuestions = attempt.question_set.questions.length;
+    const totalQuestions = attempt.questionSet.questions.length;
     const correctAnswers = attempt.score;
     const percentage = Math.round((correctAnswers / totalQuestions) * 100);
 
@@ -677,11 +677,11 @@ const getAttemptResult = async (req, res) => {
         correctAnswers,
         percentage,
         passed: percentage >= 70,
-        submittedAt: attempt.submitted_at,
+        submittedAt: attempt.submittedAt,
         answers,
         questionSet: {
-          id: attempt.question_set.id,
-          title: attempt.question_set.title,
+          id: attempt.questionSet.id,
+          title: attempt.questionSet.title,
         },
       },
     });
@@ -710,10 +710,10 @@ const submitAttempt = async (req, res) => {
     const userId = req.user.id;
 
     const attempt = await Attempt.findOne({
-      where: { id: attemptId, user_id: userId },
+      where: { id: attemptId, userId: userId },
       include: {
         model: QuestionSet,
-        as: "question_set",
+        as: "questionSet",
         include: {
           model: Question,
           as: "questions",
@@ -728,7 +728,7 @@ const submitAttempt = async (req, res) => {
       });
     }
 
-    if (attempt.is_submitted) {
+    if (attempt.isSubmitted) {
       return res.status(400).json({
         success: false,
         message: "Attempt has already been submitted",
@@ -739,9 +739,9 @@ const submitAttempt = async (req, res) => {
     let results = [];
 
     for (const answer of answers) {
-      const { question_id, selected_option_id } = answer;
+      const { questionId, selectedOptionId } = answer;
 
-      const question = await Question.findByPk(question_id, {
+      const question = await Question.findByPk(questionId, {
         include: {
           model: Option,
           as: "options",
@@ -753,38 +753,38 @@ const submitAttempt = async (req, res) => {
       }
 
       const selectedOption = question.options.find(
-        (opt) => opt.id === selected_option_id,
+        (opt) => opt.id === selectedOptionId,
       );
 
-      const correctOption = question.options.find((opt) => opt.is_correct);
-      const isCorrect = selectedOption?.is_correct || false;
+      const correctOption = question.options.find((opt) => opt.isCorrect);
+      const isCorrect = selectedOption?.isCorrect || false;
 
       if (isCorrect) score += 1;
 
       // Save the answer
       await AttemptAnswer.create({
-        attempt_id: attemptId,
-        question_id,
-        selected_option_id,
-        is_correct: isCorrect,
+        attemptId: attemptId,
+        questionId,
+        selectedOptionId,
+        isCorrect: isCorrect,
       });
 
       results.push({
-        question_id,
-        question_text: question.question_text,
-        selectedOption: selectedOption?.option_text || null,
-        correct_option: correctOption?.option_text || null,
-        is_correct: isCorrect,
+        questionId,
+        questionText: question.questionText,
+        selectedOption: selectedOption?.optionText || null,
+        correctOption: correctOption?.optionText || null,
+        isCorrect: isCorrect,
       });
     }
 
     await attempt.update({
       score,
-      is_submitted: true,
-      submitted_at: new Date(),
+      isSubmitted: true,
+      submittedAt: new Date(),
     });
 
-    const totalQuestions = attempt.question_set.questions.length;
+    const totalQuestions = attempt.questionSet.questions.length;
     const percentage = Math.round((score / totalQuestions) * 100);
 
     return res.status(200).json({
@@ -797,7 +797,7 @@ const submitAttempt = async (req, res) => {
         correctAnswers: score,
         percentage,
         passed: percentage >= 70,
-        submittedAt: attempt.submitted_at,
+        submittedAt: attempt.submittedAt,
       },
     });
   } catch (error) {

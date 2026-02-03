@@ -10,25 +10,37 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       AttemptAnswer.belongsTo(models.Attempt, {
-        foreignKey: "attempt_id",
+        foreignKey: "attemptId",
         as: "attempt",
       });
       AttemptAnswer.belongsTo(models.Question, {
-        foreignKey: "question_id",
+        foreignKey: "questionId",
         as: "question",
       });
       AttemptAnswer.belongsTo(models.Option, {
-        foreignKey: "selected_option_id",
+        foreignKey: "selectedOptionId",
         as: "selectedOption",
       });
     }
   }
   AttemptAnswer.init(
     {
-      attempt_id: DataTypes.INTEGER,
-      question_id: DataTypes.INTEGER,
-      selected_option_id: DataTypes.INTEGER,
-      is_correct: DataTypes.BOOLEAN,
+      attemptId: {
+        type: DataTypes.INTEGER,
+        field: "attempt_id",
+      },
+      questionId: {
+        type: DataTypes.INTEGER,
+        field: "question_id",
+      },
+      selectedOptionId: {
+        type: DataTypes.INTEGER,
+        field: "selected_option_id",
+      },
+      isCorrect: {
+        type: DataTypes.BOOLEAN,
+        field: "is_correct",
+      },
     },
     {
       sequelize,
@@ -36,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "attempt_answers",
       underscored: true,
       paranoid: true,
-    }
+    },
   );
   return AttemptAnswer;
 };

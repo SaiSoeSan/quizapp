@@ -89,4 +89,8 @@ router.get("/users/:id", admin.getUserById);
 router.put("/users/:id", admin.updateUser);
 router.delete("/users/:id", admin.deleteUser);
 
+// Attempt management routes
+router.get("/attempts/stats", admin.getAttemptStats);
+router.get("/attempts", admin.getAllAttempts);
+
 module.exports = router;

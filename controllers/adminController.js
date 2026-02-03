@@ -1,4 +1,4 @@
-const { QuestionSet, Question, Option, User } = require("../models");
+const { QuestionSet, Question, Option, User, Attempt } = require("../models");
 const { validationResult } = require("express-validator");
 const { sequelize } = require("../models");
 const bcrypt = require("bcrypt");
@@ -609,6 +609,108 @@ const createStudent = async (req, res) => {
   }
 };
 
+/**
+ * Get total attempts count and recent attempts
+ */
+const getAttemptStats = async (req, res) => {
+  try {
+    // Get total submitted attempts count
+    const totalAttempts = await Attempt.count({
+      where: { isSubmitted: true },
+    });
+
+    // Get recent 5 attempts with user and question set details
+    const recentAttempts = await Attempt.findAll({
+      where: { isSubmitted: true },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
+        {
+          model: QuestionSet,
+          as: "questionSet",
+          attributes: ["id", "title"],
+        },
+      ],
+      order: [["submittedAt", "DESC"]],
+      limit: 5,
+    });
+
+    res.status(200).json({
+      success: true,
+      totalAttempts,
+      recentAttempts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get all attempts with stats grouped by question set
+ */
+const getAllAttempts = async (req, res) => {
+  try {
+    // Get all submitted attempts with user and question set details
+    const attempts = await Attempt.findAll({
+      where: { isSubmitted: true },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
+        {
+          model: QuestionSet,
+          as: "questionSet",
+          attributes: ["id", "title"],
+        },
+      ],
+      order: [["submittedAt", "DESC"]],
+    });
+
+    // Get stats per question set
+    const questionSetStats = await Attempt.findAll({
+      where: { isSubmitted: true },
+      attributes: [
+        "questionSetId",
+        [sequelize.fn("COUNT", sequelize.col("Attempt.id")), "totalAttempts"],
+        [sequelize.fn("AVG", sequelize.col("score")), "averageScore"],
+        [sequelize.fn("MAX", sequelize.col("score")), "highestScore"],
+        [sequelize.fn("MIN", sequelize.col("score")), "lowestScore"],
+      ],
+      include: [
+        {
+          model: QuestionSet,
+          as: "questionSet",
+          attributes: ["id", "title"],
+        },
+      ],
+      group: ["questionSetId", "questionSet.id"],
+      raw: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      attempts,
+      questionSetStats,
+      total: attempts.length,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createQuestionSet,
   getAllQuestionSets,
@@ -624,4 +726,6 @@ module.exports = {
   updateUser,
   deleteUser,
   createStudent,
+  getAttemptStats,
+  getAllAttempts,
 };
