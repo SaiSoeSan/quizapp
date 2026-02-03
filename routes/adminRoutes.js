@@ -10,7 +10,10 @@ router.use([authenticate, adminOnly]);
 const createQuestionSetValidationRules = [
   body("title").notEmpty().withMessage("Title is required"),
   body("description").optional().isString(),
-  body("youtubeLink").optional().isURL().withMessage("Must be a valid URL"),
+  body("youtubeLink")
+    .optional({ values: "falsy" })
+    .isURL()
+    .withMessage("Must be a valid URL"),
   body("status")
     .optional()
     .isIn(["draft", "active"])
