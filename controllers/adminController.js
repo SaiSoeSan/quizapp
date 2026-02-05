@@ -670,36 +670,92 @@ const getAllAttempts = async (req, res) => {
           model: QuestionSet,
           as: "questionSet",
           attributes: ["id", "title"],
+          include: [
+            {
+              model: Question,
+              as: "questions",
+              attributes: ["id"],
+            },
+          ],
         },
       ],
       order: [["submittedAt", "DESC"]],
     });
 
-    // Get stats per question set
-    const questionSetStats = await Attempt.findAll({
-      where: { isSubmitted: true },
-      attributes: [
-        "questionSetId",
-        [sequelize.fn("COUNT", sequelize.col("Attempt.id")), "totalAttempts"],
-        [sequelize.fn("AVG", sequelize.col("score")), "averageScore"],
-        [sequelize.fn("MAX", sequelize.col("score")), "highestScore"],
-        [sequelize.fn("MIN", sequelize.col("score")), "lowestScore"],
-      ],
-      include: [
-        {
-          model: QuestionSet,
-          as: "questionSet",
-          attributes: ["id", "title"],
+    // Map attempts to include totalQuestions and percentage
+    const attemptsWithPercentage = attempts.map((attempt) => {
+      const totalQuestions = attempt.questionSet?.questions?.length || 0;
+      const percentage =
+        totalQuestions > 0
+          ? Math.round((attempt.score / totalQuestions) * 100)
+          : 0;
+      return {
+        id: attempt.id,
+        userId: attempt.userId,
+        questionSetId: attempt.questionSetId,
+        score: attempt.score,
+        totalQuestions,
+        percentage,
+        isSubmitted: attempt.isSubmitted,
+        submittedAt: attempt.submittedAt,
+        createdAt: attempt.createdAt,
+        updatedAt: attempt.updatedAt,
+        user: attempt.user,
+        questionSet: {
+          id: attempt.questionSet?.id,
+          title: attempt.questionSet?.title,
         },
-      ],
-      group: ["questionSetId", "questionSet.id"],
-      raw: false,
+      };
+    });
+
+    // Calculate stats per question set from the attempts data
+    const statsMap = new Map();
+
+    for (const attempt of attempts) {
+      const qsId = attempt.questionSetId;
+      const totalQuestions = attempt.questionSet?.questions?.length || 0;
+
+      if (!statsMap.has(qsId)) {
+        statsMap.set(qsId, {
+          questionSetId: qsId,
+          totalAttempts: 0,
+          totalScore: 0,
+          totalQuestions,
+          questionSet: {
+            id: attempt.questionSet?.id,
+            title: attempt.questionSet?.title,
+          },
+        });
+      }
+
+      const stat = statsMap.get(qsId);
+      stat.totalAttempts += 1;
+      stat.totalScore += attempt.score || 0;
+    }
+
+    // Calculate percentages for stats
+    const statsWithPercentage = Array.from(statsMap.values()).map((stat) => {
+      const averagePercentage =
+        stat.totalAttempts > 0 && stat.totalQuestions > 0
+          ? Math.round(
+              (stat.totalScore / (stat.totalAttempts * stat.totalQuestions)) *
+                100,
+            )
+          : 0;
+
+      return {
+        questionSetId: stat.questionSetId,
+        totalAttempts: stat.totalAttempts,
+        totalQuestions: stat.totalQuestions,
+        averageScore: averagePercentage,
+        questionSet: stat.questionSet,
+      };
     });
 
     res.status(200).json({
       success: true,
-      attempts,
-      questionSetStats,
+      attempts: attemptsWithPercentage,
+      questionSetStats: statsWithPercentage,
       total: attempts.length,
     });
   } catch (error) {
