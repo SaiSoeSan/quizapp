@@ -3,6 +3,12 @@ const { authRoutes, adminRoutes, studentRoutes } = require("./routes");
 const app = express();
 const port = process.env.PORT || 3000;
 
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+const swaggerConfig = require("./config/swagger");
+const swaggerSpec = swaggerJsdoc(swaggerConfig);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Middleware to parse JSON bodies
 app.use(express.json());
 
