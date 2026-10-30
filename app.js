@@ -1,7 +1,6 @@
 const express = require("express");
 const { authRoutes, adminRoutes, studentRoutes } = require("./routes");
 const app = express();
-const port = process.env.PORT || 3000;
 
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
@@ -29,10 +28,5 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
 
 module.exports = app;

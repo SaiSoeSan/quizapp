@@ -7,9 +7,10 @@
   "type": "commonjs",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app.js",
-    "start": "node app.js",
+    "test": "jest --runInBand --watchman=false",
+    "test:watch": "jest --watch --watchman=false",
+    "dev": "nodemon server.js",
+    "start": "node server.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:status": "sequelize-cli db:migrate:status",
     "db:rollback": "sequelize-cli db:migrate:undo",
@@ -30,7 +31,9 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "jest": "^30.5.2",
     "nodemon": "^3.1.11",
-    "sequelize-cli": "^6.6.3"
+    "sequelize-cli": "^6.6.3",
+    "supertest": "^7.3.1"
   }
 }
