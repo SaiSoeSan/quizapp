@@ -148,10 +148,32 @@ docker compose down -v
 
 ## Testing
 
-Run the Jest test suite:
+The backend uses Jest and SuperTest for automated unit and HTTP integration testing. The test suite isolates Sequelize models with Jest mocks, so it can run without a live MySQL database.
+
+The tests cover:
+
+- Health and Swagger API endpoints
+- User registration and login
+- Request validation and duplicate email handling
+- Password hashing and JWT generation
+- Missing, invalid, and unknown-user bearer tokens
+- Admin-only and student-only authorization
+- Admin question set endpoints
+- Student dashboard, question set, and attempt endpoints
+- Controller error responses and database failures
+
+Run the complete Jest test suite:
 
 ```bash
 npm test
+```
+
+The current suite contains 38 tests across 2 test suites.
+
+Run only the HTTP API test file:
+
+```bash
+npx jest --runInBand --watchman=false app.test.js
 ```
 
 Run Jest in watch mode:
