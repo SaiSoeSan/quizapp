@@ -114,6 +114,7 @@ describe("health and API documentation", () => {
         auth: "/api/auth",
         admin: "/api/admin",
         student: "/api/student",
+        ai: "/api/ai",
       },
     });
   });

@@ -9,6 +9,8 @@ The backend for the Quiz App is an Express and Sequelize API backed by MySQL. It
 - Question set, question, option, attempt, and answer management
 - Sequelize migrations and seeders
 - Swagger/OpenAPI documentation
+- Claude-powered chat and stateless AI quiz generation
+- JWT protection and per-user AI rate limits
 - Jest and Supertest test suite
 - Docker Compose development environment
 
@@ -43,6 +45,15 @@ NODE_ENV=development
 
 JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRES_IN=7d
+
+# Claude API
+ANTHROPIC_API_KEY=your_anthropic_api_key
+ANTHROPIC_MODEL=claude-sonnet-5-5
+ANTHROPIC_TIMEOUT_MS=30000
+
+# AI rate limits (requests per minute)
+AI_CHAT_RATE_LIMIT_MAX=20
+AI_QUIZ_RATE_LIMIT_MAX=10
 ```
 
 The database named by `DB_NAME` must exist before running migrations. When using the included Docker Compose configuration, the MySQL service creates this database automatically.
@@ -104,6 +115,7 @@ npm run db:seed:undo:all
 | Authentication | `/api/auth` | Register and log in users |
 | Administration | `/api/admin` | Manage users and question sets |
 | Student | `/api/student` | Browse question sets and submit quiz attempts |
+| AI | `/api/ai` | Chat with Claude and generate stateless quizzes |
 
 The root endpoint returns a health response and the available API areas:
 
@@ -122,6 +134,62 @@ Authenticated endpoints use a JWT bearer token:
 ```text
 Authorization: Bearer <token>
 ```
+
+## Claude AI endpoints
+
+Both AI endpoints require a valid JWT bearer token.
+
+### Chat
+
+```bash
+curl -X POST http://localhost:3000/api/ai/chat \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Explain artificial intelligence in simple terms."}'
+```
+
+Success:
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Artificial intelligence is..."
+  }
+}
+```
+
+### Generate a quiz
+
+```bash
+curl -X POST http://localhost:3000/api/ai/generate-quiz \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"JavaScript Fundamentals","numberOfQuestions":5,"difficulty":"beginner"}'
+```
+
+Success:
+
+```json
+{
+  "success": true,
+  "data": {
+    "title": "JavaScript Fundamentals",
+    "topic": "JavaScript Fundamentals",
+    "difficulty": "beginner",
+    "questions": [
+      {
+        "question": "Which keyword declares a variable that can be reassigned?",
+        "options": ["const", "let", "class", "import"],
+        "correctAnswer": "let",
+        "explanation": "The let keyword declares a block-scoped variable that can be reassigned."
+      }
+    ]
+  }
+}
+```
+
+Generated quizzes are stateless and are not stored in the database.
 
 ## Docker Compose
 
@@ -161,6 +229,7 @@ The tests cover:
 - Admin question set endpoints
 - Student dashboard, question set, and attempt endpoints
 - Controller error responses and database failures
+- Claude chat, structured quiz generation, output validation, authentication, and rate limiting
 
 Run the complete Jest test suite:
 
@@ -168,7 +237,16 @@ Run the complete Jest test suite:
 npm test
 ```
 
-The current suite contains 38 tests across 2 test suites.
+The current suite contains 74 tests across 5 test suites.
+
+Run the focused AI tests:
+
+```bash
+npx jest --runInBand --watchman=false \
+  services/aiService.test.js \
+  validators/quizOutputValidator.test.js \
+  controllers/aiController.test.js
+```
 
 Run only the HTTP API test file:
 
@@ -191,7 +269,21 @@ middleware/   Authentication middleware
 migrations/   Sequelize database migrations
 models/       Sequelize models
 routes/       API route definitions
+services/     External provider integrations
+validators/   LLM output validation
 seeders/      Demo database seed data
 app.js        Express application
 server.js     Application entry point
 ```
+
+## AI security and cost considerations
+
+- Keep `ANTHROPIC_API_KEY` only in backend environment variables.
+- Never commit `.env`, `.env.production`, or real credentials.
+- AI endpoints require an existing JWT bearer token.
+- Chat and quiz endpoints have separate per-user rate limits.
+- Topic, message, question count, and difficulty inputs are validated before calling Claude.
+- Claude JSON output is checked again for exact structure and valid quiz answers.
+- Provider failures return generic `502`, `503`, or `504` responses.
+- Logs contain outcomes, internal error codes, and request IDs, but not API keys, prompts, auth headers, or raw provider errors.
+- Claude usage has API costs; set provider and application limits before public deployment.

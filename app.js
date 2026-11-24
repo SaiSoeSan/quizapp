@@ -1,5 +1,5 @@
 const express = require("express");
-const { authRoutes, adminRoutes, studentRoutes } = require("./routes");
+const { authRoutes, adminRoutes, studentRoutes, aiRoutes } = require("./routes");
 const app = express();
 
 const swaggerJsdoc = require("swagger-jsdoc");
@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
       auth: "/api/auth",
       admin: "/api/admin",
       student: "/api/student",
+      ai: "/api/ai",
     },
   });
 });
@@ -28,5 +29,6 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/ai", aiRoutes);
 
 module.exports = app;
